@@ -107,4 +107,4 @@ stylesense/
 ---
 
 ## 📝 License
-MIT — Built for hackathon. Good luck! ✨
+MIT — Built for hackathon.
