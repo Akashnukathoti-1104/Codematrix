@@ -1,110 +1,143 @@
-# StyleSense 👗✨
-### Generative AI–Powered Fashion Recommendation System
-
-A full-stack fashion intelligence platform using **FastAPI**, **Gemini**, **Groq**, and **Hugging Face**.
+# StyleSense — AI Fashion Recommendation System
+### Generative AI · 24-Hour Build Plan
 
 ---
 
-## 🚀 Quick Start (5 minutes)
+## ⚡ Quick Start (5 minutes)
 
-### 1. Clone & Install
 ```bash
-git clone <your-repo>
-cd stylesense
+# 1. Clone / unzip your files
+# 2. Install Python deps
 pip install -r requirements.txt
-```
 
-### 2. Set Up API Keys
-```bash
+# 3. Create .env from example
 cp .env.example .env
-# Edit .env and add your keys:
-```
+# → Fill in your API keys
 
-| Key | Where to get it |
-|-----|----------------|
-| `TOGETGER_AI` |api.together.xyz /(Free)  |
-| `GROQ_API_KEY` | https://console.groq.com/ (free) |
-| `HF_API_KEY` | https://huggingface.co/settings/tokens (free) |
+# 4. Start backend
+python main.py
+# → Running at http://localhost:8000
 
-### 3. Run
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-### 4. Open in Browser
-```
-http://localhost:8000
+# 5. Open frontend
+# → Open index.html in browser (or serve via VS Code Live Server)
+# → Go to ⚙ Setup tab and enter http://localhost:8000
 ```
 
 ---
 
-## 📁 Project Structure
+## 🗺️ 24-Hour Development Phases
+
+| Phase | Hours | Tasks | APIs Used |
+|-------|-------|-------|-----------|
+| **1 · Setup** | 0–4h | FastAPI skeleton, CORS, health, .env, folder structure | — |
+| **2 · LLM Endpoints** | 4–10h | `/recommendations`, `/trends`, `/occasion-outfit`, `/chat` | Groq |
+| **3 · Vision Analysis** | 10–17h | `/analyze-outfit`, HuggingFace classifier, image upload | HuggingFace |
+| **4 · Image Generation** | 17–22h | `/generate-outfit-image`, Together AI FLUX, async loading | Together AI |
+| **5 · Polish & Deploy** | 22–24h | Error handling, loading states, deploy to Render/Railway | — |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────┐
+│            Frontend (index.html)        │
+│  • 6 sections: Home/Recommend/Analyze/  │
+│    Trends/Occasion/Chat                 │
+│  • Direct Together AI calls for images  │
+│  • Fallback: calls Groq directly if     │
+│    backend is offline                   │
+└──────────────┬──────────────────────────┘
+               │ HTTP
+┌──────────────▼──────────────────────────┐
+│         FastAPI Backend (main.py)       │
+│  POST /api/recommendations  → Groq LLM  │
+│  GET  /api/trends           → Groq LLM  │
+│  POST /api/occasion-outfit  → Groq LLM  │
+│  POST /api/chat             → Groq LLM  │
+│  POST /api/analyze-outfit   → HF + Groq │
+│  POST /api/generate-outfit-image → FLUX │
+└──────────────┬──────────────────────────┘
+               │
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+  Groq      HuggingFace  Together AI
+ (LLM)     (Classifier)  (FLUX Images)
+```
+
+---
+
+## 🔑 API Keys Needed
+
+| Service | Get Key At | Cost |
+|---------|-----------|------|
+| **Groq** | console.groq.com | Free tier (600 req/min) |
+| **HuggingFace** | huggingface.co/settings/tokens | Free |
+| **Together AI** | api.together.xyz | Free $25 credits on signup |
+
+---
+
+## 📁 File Structure
 
 ```
 stylesense/
-├── main.py                          # FastAPI app entry point
-├── requirements.txt
-├── .env.example                     # API key template
-├── backend/
-│   ├── routes/
-│   │   ├── recommendations.py       # /api/recommend, /api/trends, /api/chat
-│   │   └── image_analysis.py        # /api/analyze-image
-│   └── services/
-│       ├── gemini_service.py        # Gemini 1.5 Flash (vision + text)
-│       ├── groq_service.py          # Groq LLaMA3 (fast text AI)
-│       └── huggingface_service.py   # HF CLIP + color detection
-└── frontend/
-    └── index.html                   # Complete single-file UI
+├── index.html          ← Full frontend (single file)
+├── main.py             ← FastAPI backend
+├── requirements.txt    ← Python dependencies
+├── .env.example        ← API keys template
+└── .env                ← Your actual keys (git-ignored)
 ```
 
 ---
 
-## 🌐 API Endpoints
+## 🖼️ Image Generation Flow
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/recommend` | Personalized outfit recommendations |
-| `POST` | `/api/analyze-image` | Upload & analyze outfit photo |
-| `GET`  | `/api/trends` | Current fashion trend report |
-| `POST` | `/api/occasion-outfit` | Outfit for specific occasion |
-| `POST` | `/api/chat` | Conversational style assistant |
-| `GET`  | `/health` | Health check |
+The frontend generates outfit images directly from the browser via Together AI (no backend round-trip needed):
 
----
+```javascript
+// In index.html — generateOutfitImage()
+fetch('https://api.together.xyz/v1/images/generations', {
+  headers: { Authorization: `Bearer ${TOGETHER_KEY}` },
+  body: JSON.stringify({
+    model: 'black-forest-labs/FLUX.1-schnell-Free',  // FREE model
+    prompt: `Fashion editorial photography, ${outfitDescription}, studio white background`,
+    width: 512, height: 768, steps: 4
+  })
+})
+```
 
-## 🤖 AI Stack
-
-| Feature | Technology |
-|---------|-----------|
-| Image analysis & outfit generation | **Gemini 1.5 Flash** |
-| Fast recommendations & chat | **Groq + LLaMA3-8B** |
-| Clothing classification | **HuggingFace CLIP** |
-| Color extraction | **Pillow (PIL)** |
+Images appear progressively — cards show skeleton loaders while images generate (~5–15s each).
 
 ---
 
-## 🎨 Features
+## 🚀 Deploy to Render (free)
 
-- **Home** — Animated landing with capability overview
-- **Recommend** — Style preference form → 5 personalized outfit cards
-- **Analyze** — Drag & drop image → Gemini vision analysis + color palette
-- **Trends** — AI-generated current trend report with season color
-- **Occasion** — Pick an event → complete outfit with pieces & budget
-- **Stylist Chat** — Multi-turn conversational AI style advisor
-
----
-
-## 🛠 Troubleshooting
-
-**HuggingFace 503 error** → Model is cold-starting. Wait 20s and retry.
-
-**Gemini quota error** → You've hit the free tier limit. Wait or use a different key.
-
-**CORS error in browser** → Make sure backend is running on `localhost:8000`.
-
-**Slow responses** → Groq is fastest; Gemini can take 3-8 seconds for images.
+1. Push to GitHub
+2. New Web Service → connect repo
+3. Build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add env vars from `.env`
 
 ---
 
-## 📝 License
-MIT — Built for hackathon.
+## 🎯 Demo Script (for judges)
+
+1. Open → **Home** — show the hero capabilities card
+2. Go to **⚙ Setup** — show API key config (use your real keys)
+3. Go to **Recommend** — select preferences → Generate
+   - Show skeleton loading → then image cards appearing one by one
+4. Go to **Analyze** — upload a real outfit photo → analyze
+   - Show style score, detected items, AI alternative suggestions
+5. Go to **Trends** — show seasonal trend report with visuals
+6. Go to **Occasion** — pick "Date Night" → generate with image
+7. Go to **Stylist Chat** — live Q&A
+
+---
+
+## 💡 Key Technical Decisions
+
+- **FLUX.1-schnell-Free** — 4-step diffusion, fastest free model, good quality
+- **Llama 3.3 70B on Groq** — fastest LLM inference available, free tier
+- **JSON mode** — all Groq calls use `response_format: json_object` for reliable parsing
+- **Graceful degradation** — frontend falls back to direct Groq API if backend is down
+- **Progressive image loading** — skeleton → real image, no blocking UX
