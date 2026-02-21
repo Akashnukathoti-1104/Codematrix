@@ -22,7 +22,7 @@ cp .env.example .env
 
 | Key | Where to get it |
 |-----|----------------|
-| `GEMINI_API_KEY` | https://aistudio.google.com/ (free) |
+| `TOGETGER_AI` |api.together.xyz /(Free)  |
 | `GROQ_API_KEY` | https://console.groq.com/ (free) |
 | `HF_API_KEY` | https://huggingface.co/settings/tokens (free) |
 
